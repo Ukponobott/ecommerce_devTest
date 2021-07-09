@@ -9,11 +9,10 @@ class OrderModel(db.Model, TimeMixin):
     __tablename__ = 'order'
 
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey("cutomer.id"), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customer.id"), nullable=False)
     order_data = db.Column(db.String(120), nullable=False)
     status = db.Column(db.String(120), nullable=False)
-    
-    customer = db.relationship("CustomerModel", backref=db.backref('orders', lazy=True))
+
 
     def __init__(self, cutomer_id, order_data, status):
         self.customer_id = customer_id

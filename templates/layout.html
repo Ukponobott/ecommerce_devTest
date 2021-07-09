@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hayok Shoes</title>
+    <link href="../static/style.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+{% if session %}
+
+{% else %}
+
+{% endif %}
+
+<div class="header">
+
+    <h1 class="welcome-note">Hayok Shoes</h1>
+
+    <p class="header-text">Shop for Best Quality Shoes Online</p>
+
+</div>
+
+{% for message in get_flashed_messages() %}
+{{ message }}
+{% endfor %}
+
+{%  block content %}
+
+{% endblock %}
+
+</body>
+</html>

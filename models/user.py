@@ -49,13 +49,12 @@ class CutomerModel(db.Model, TimeMixin):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(80), unique=True, nullable=False)
-    confirmed = db.Column(db.Boolean, nullable=False, default=False)
     password_hash = db.Column(db.String(80))
+    orders = db.relationship('OrderModel', backref='customer', lazy=True)
 
-    def __init__(self, full_name, email, confirmed, password):
+    def __init__(self, full_name, email, password):
         self.full_name = full_name
         self.email = email
-        self.confirmed = confirmed
         self.set_password(password)
 
     def save_to_db(self):
