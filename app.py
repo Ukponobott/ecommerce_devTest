@@ -16,7 +16,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///ecommerce.db'
 def index():
     if request.method == "POST":
 
-    #Get form data from the HTML FORM
+    # Get form data from the HTML FORM
         email = request.form["email"]
         password = request.form["password"]
 
@@ -64,14 +64,20 @@ def admin():
         email = request.form["email"]
         password = request.form["password"]
 
-        # check if it matches the default values
+        # check if it matches the default values and send appropaite response
 
+        # email and password matches
         if email == "admin@mail.com" and password == "1234567890":
             return render_template("addProduct.html")
+
+        # incorrect email and correct password
         elif email != "admin@mail.com" and password == "1234567890":
             flash("Email does not exist, please try again")
+        # correct email and incorrect password
         elif email == "admin@mail.com" and password != "1234567890":
             flash("Wrong Password")
+
+        # incorrect details
         elif email != "admin@mail.com" and password != "1234567890":
             flash("Invalid Credentials")
     else:
@@ -81,7 +87,19 @@ def admin():
 @app.route("/add-product", methods=["GET", "POST"])
 def add_product():
     if request.method == "POST":
-        pass
+        # Get the Product Data from the HTML Form
+        name = request.form["name"]
+        brand = request.form["brand"]
+        price = request.form["price"]
+        category = request.form["category"]
+        colour = request.form["colour"]
+        quantity = request.form["quantity"]
+
+        # Use the Product Model to create a new Product using the parameters gotten from the HTML FORM 
+        new_product = ProductModel(name=name, brand=brand, price=price, category=category, colour=colour, quantity=quantity)
+        new_product.save_to_db()
+        flash("New Product Added Successfully")
+        return redirect('add_product') 
     else:
         return render_template("addProduct.html")
 

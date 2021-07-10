@@ -8,8 +8,8 @@
 <form action="{{url_for('add_product')}}" method="POST">
     <label>Shoe Name: </label>
     <input type="text" name="name" required> <br>
-    <label>Brand: </label> <br>
-    <input type="text" name="description"></input> <br>
+    <label>Brand: </label>
+    <input type="text" name="brand"></input> <br>
     <label>Price: </label>
     <input type="number" name="price" required> <br>
     <label>Category:</label>
@@ -19,11 +19,11 @@
         <option value="loafers">Loafers</option>
         <option value="sneakers">Sneakers</option>
         <option value="sandals">Sandals</option>
-    </select>
+    </select> <br>
     <label>Colour:</label>
-    <input type="text" name="colour" required>
+    <input type="text" name="colour" required> <br>
     <label>Quantity</label>
-    <input type="number" name="quantity" required>
+    <input type="number" name="quantity" required> <br>
     <input type="submit" value="Submit">
 
 </form>

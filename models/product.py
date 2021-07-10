@@ -12,15 +12,15 @@ class ProductModel(db.Model, TimeMixin):
     name = db.Column(db.String(80), unique=True, nullable=False)
     brand = db.Column(db.String(80), nullable=False)
     price = db.Column(db.Float(precision=3))
-    catergory = db.Column(db.String(80), nullable=False)
+    category = db.Column(db.String(80), nullable=False)
     colour = db.Column(db.String(80), nullable=False)
     quantity = db.Column(db.Integer)
 
-    def __init__(self, name, brand, price, catergory, colour, quantity):
+    def __init__(self, name, brand, price, category, colour, quantity):
         self.name = name
         self.brand = brand
         self.price = price
-        self.catergory = catergory
+        self.category = category
         self.colour = colour
         self.quantity = quantity
 
