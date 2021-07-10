@@ -8,7 +8,7 @@
     {% for product in products %}
 
         <div>
-            {{ product.name }}
+            {{ product.name }}      
 
             <a href={{url_for('add_to_cart', product_id=product.id)}}><button>Add to Cart</button></a>
         </div> 
@@ -24,13 +24,17 @@
 
     <h1>Shopping Cart</h1>
 
+    {% if cart.values() %}
+
     {% for item in cart.values() %}
-        {{ item.name }}   {{ item.qty }}        {{ item.price }} <br>
+        Shoe Name: {{ item.name }}  Quantity: {{ item.qty }}   Price:   {{ item.price }} <br>
     {% endfor %}
+
+    {% endif %}
 
     <p>Total: {{ total }}</p>
 
-    <a href="#"><button>Proceed to Checkout</button></a>
+    <a href="{{url_for('create_order', customer_id=customer.id)}}"><button>Proceed to Checkout</button></a>
 </div>
 
 {% endblock %}

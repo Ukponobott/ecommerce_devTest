@@ -10,14 +10,20 @@ app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.urandom(16)
 app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///ecommerce.db'
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Function to Authenticate Users based on roles, Only Admin Users can add/update Products and Admin can create Orders
 def authenticate_user():
     current_user = session["email"]
-    if AdminModel.find_by_email(current_user):
+    if current_user == "admin@mail.com": #AdminModel.find_by_email(current_user):
         return "Admin"
     elif CutomerModel.find_by_email(current_user):
         return "Customer"
+
+# Global Variables to Hold the CART ITEMs and Total Amount
+# cart_items = {}
+# amount = 0
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -76,7 +82,7 @@ def admin():
         # email and password matches
         if email == "admin@mail.com" and password == "1234567890":
             session["email"] = email
-            return render_template("addProduct.html")
+            return redirect(url_for("add_product"))
 
         # incorrect email and correct password
         elif email != "admin@mail.com" and password == "1234567890":
@@ -96,42 +102,32 @@ def admin():
 def add_product():
     auth = authenticate_user()
 
-    if auth != "Admin":
+    if auth == "Admin":
+        if request.method == "POST":
+            # Get the Product Data from the HTML Form
+            name = request.form["name"]
+            brand = request.form["brand"]
+            price = request.form["price"]
+            category = request.form["category"]
+            colour = request.form["colour"]
+            quantity = request.form["quantity"]
+
+            # Use the Product Model to create a new Product using the parameters gotten from the HTML FORM 
+            new_product = ProductModel(name=name, brand=brand, price=price, category=category, colour=colour, quantity=quantity)
+            new_product.save_to_db()
+            flash("New Product Added Successfully")
+            return redirect(url_for('all_products'))
+        else:
+            return render_template("addProduct.html")
+    else:
         flash("Access Denied")
         return redirect(url_for("admin"))
-    if request.method == "POST":
-        # Get the Product Data from the HTML Form
-        name = request.form["name"]
-        brand = request.form["brand"]
-        price = request.form["price"]
-        category = request.form["category"]
-        colour = request.form["colour"]
-        quantity = request.form["quantity"]
 
-        # Use the Product Model to create a new Product using the parameters gotten from the HTML FORM 
-        new_product = ProductModel(name=name, brand=brand, price=price, category=category, colour=colour, quantity=quantity)
-        new_product.save_to_db()
-        flash("New Product Added Successfully")
-        return redirect(url_for('all_products'))
-    else:
-        return render_template("addProduct.html")
-
-
-@app.route("/products", methods=["GET", "POST"])
-def all_products():
-    
-    products = ProductModel.find_all()
-    if request.method == "POST":
-        pass
-        # Add to Cart
-    else:
-        if "cart" not in session:
-            print("No cart")
-            return render_template("allProducts.html", products=products)
-        items = session["cart"]
-        cart_items = {}
-        amount = 0
-
+def cart_factory():
+    items = session["cart"]
+    cart_items = {}
+    amount = 0
+    if items:
         for item in items:
             product = ProductModel.find_by_id(item)
             amount += product.price
@@ -141,18 +137,60 @@ def all_products():
                 cart_items[product.id]["qty"] +=1
             else:
                 cart_items[product.id] = {"qty": 1, "name": product.name, "price": product.price}
-                print(cart_items)
-        return render_template("allProducts.html", products=products, cart=cart_items, total=amount)
+    return [cart_items, amount]
+
+@app.route("/products")
+def all_products():
+    # Query the DB to get all products
+    products = ProductModel.find_all()
+    customer = CutomerModel.find_by_email(session["email"])
+    # Check if products have been previously added to cart and Cart variable is in Session
+    if "cart" not in session:
+        print("No cart")
+        return render_template("allProducts.html", products=products, cart={}, customer=customer)
+    else:
+    # Cart is in Session, set the value to a variable - items, iterate over the items and find the product id, calculate the price, qty and add it to cart items global variable
+        data = cart_factory()
+        return render_template("allProducts.html", products=products, cart=data[0], total=data[1], customer=customer)
 
 
 @app.route("/add-to-cart/<int:product_id>")
 def add_to_cart(product_id):
+    # Check if Cart is present in session Variables / Set it if NOT available
     if "cart" not in session:
         session["cart"] = []
+    # Cart is a list to hold all products added to cart, use the append method to add new products to the cart list data structure
     session["cart"].append(product_id)
     print(session["cart"])
     flash("Successfully Added to Cart, Proceed to Checkout or Continue Shopping")
     return redirect(url_for('all_products'))
+
+
+@app.route("/<int:customer_id>/create-order", methods=["GET", "POST"])
+def create_order(customer_id):
+    if "email" in session:
+        if authenticate_user() == "Customer":
+            customer = CutomerModel.find_by_email(session["email"])
+
+            data = cart_factory()
+            if request.method == "GET":
+                print(data[0])
+                return render_template("order.html", cart=data[0], customer=customer, total=data[1])
+            else:
+                #POST REQUEST
+                order = OrderModel(customer_id, order_data=data[0], status="Pending", amount=data[1])
+                flash("Order Created, Proceed to make Payment")
+                return "Done, Proceed to Pay"
+                # Redirect to Payment page
+        else:
+            flash("Access Denied")
+            # Redirect to Login  
+            return redirect(url_for("index")) 
+    else:
+            flash("Please Sign in to place an Order")
+            # Redirect to Login  
+            return redirect(url_for("index")) 
+
 
 @app.before_first_request
 def create_tables():

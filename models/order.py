@@ -11,11 +11,12 @@ class OrderModel(db.Model, TimeMixin):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("customer.id"), nullable=False)
     order_data = db.Column(db.String(1200), nullable=False)
-    status = db.Column(db.String(120), nullable=False)
-    amount = db.Column(db.Float(precision=3))
+    status = db.Column(db.String(120), nullable=False, default="Pending")
+    amount = db.Column(db.Float(precision=3), nullable=False)
+    billing_adress = db.Column(db.String(120), nullable=False)
 
 
-    def __init__(self, cutomer_id, order_data, status, amount):
+    def __init__(self, customer_id, order_data, status, amount):
         self.customer_id = customer_id
         self.order_data = order_data
         self.status = status
