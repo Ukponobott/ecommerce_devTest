@@ -11,6 +11,13 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(16)
 app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///ecommerce.db'
 
+# Function to Authenticate Users based on roles, Only Admin Users can add/update Products and Admin can create Orders
+def authenticate_user():
+    current_user = session["email"]
+    if AdminModel.find_by_email(current_user):
+        return "Admin"
+    elif CutomerModel.find_by_email(current_user):
+        return "Customer"
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -28,7 +35,7 @@ def index():
             # check if the password suplplied matches the one saved in the DB, log in user if yes and create a session, do otherwise if not
             if check_password_hash(user.password_hash, password):
                 session["email"] = user.email
-                return redirect("all_products")
+                return redirect(url_for("all_products"))
             flash("wrong password")
             return render_template('index.html')
         else:
@@ -68,6 +75,7 @@ def admin():
 
         # email and password matches
         if email == "admin@mail.com" and password == "1234567890":
+            session["email"] = email
             return render_template("addProduct.html")
 
         # incorrect email and correct password
@@ -86,6 +94,11 @@ def admin():
 
 @app.route("/add-product", methods=["GET", "POST"])
 def add_product():
+    auth = authenticate_user()
+
+    if auth != "Admin":
+        flash("Access Denied")
+        return redirect(url_for("admin"))
     if request.method == "POST":
         # Get the Product Data from the HTML Form
         name = request.form["name"]
@@ -99,9 +112,47 @@ def add_product():
         new_product = ProductModel(name=name, brand=brand, price=price, category=category, colour=colour, quantity=quantity)
         new_product.save_to_db()
         flash("New Product Added Successfully")
-        return redirect('add_product') 
+        return redirect(url_for('all_products'))
     else:
         return render_template("addProduct.html")
+
+
+@app.route("/products", methods=["GET", "POST"])
+def all_products():
+    
+    products = ProductModel.find_all()
+    if request.method == "POST":
+        pass
+        # Add to Cart
+    else:
+        if "cart" not in session:
+            print("No cart")
+            return render_template("allProducts.html", products=products)
+        items = session["cart"]
+        cart_items = {}
+        amount = 0
+
+        for item in items:
+            product = ProductModel.find_by_id(item)
+            amount += product.price
+            print("amount")
+            print(amount)
+            if product.id in cart_items:
+                cart_items[product.id]["qty"] +=1
+            else:
+                cart_items[product.id] = {"qty": 1, "name": product.name, "price": product.price}
+                print(cart_items)
+        return render_template("allProducts.html", products=products, cart=cart_items, total=amount)
+
+
+@app.route("/add-to-cart/<int:product_id>")
+def add_to_cart(product_id):
+    if "cart" not in session:
+        session["cart"] = []
+    session["cart"].append(product_id)
+    print(session["cart"])
+    flash("Successfully Added to Cart, Proceed to Checkout or Continue Shopping")
+    return redirect(url_for('all_products'))
 
 @app.before_first_request
 def create_tables():

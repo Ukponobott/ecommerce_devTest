@@ -1,0 +1,36 @@
+
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div>
+
+    {% for product in products %}
+
+        <div>
+            {{ product.name }}
+
+            <a href={{url_for('add_to_cart', product_id=product.id)}}><button>Add to Cart</button></a>
+        </div> 
+        <br>
+
+    {% endfor %}
+
+</div>
+
+<hr>
+
+<div>
+
+    <h1>Shopping Cart</h1>
+
+    {% for item in cart.values() %}
+        {{ item.name }}   {{ item.qty }}        {{ item.price }} <br>
+    {% endfor %}
+
+    <p>Total: {{ total }}</p>
+
+    <a href="#"><button>Proceed to Checkout</button></a>
+</div>
+
+{% endblock %}

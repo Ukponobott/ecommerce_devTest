@@ -10,14 +10,16 @@ class OrderModel(db.Model, TimeMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("customer.id"), nullable=False)
-    order_data = db.Column(db.String(120), nullable=False)
+    order_data = db.Column(db.String(1200), nullable=False)
     status = db.Column(db.String(120), nullable=False)
+    amount = db.Column(db.Float(precision=3))
 
 
-    def __init__(self, cutomer_id, order_data, status):
+    def __init__(self, cutomer_id, order_data, status, amount):
         self.customer_id = customer_id
         self.order_data = order_data
         self.status = status
+        self.amount = amount
 
     def save_to_db(self):
         db.session.add(self)
