@@ -5,7 +5,7 @@
 
 
 
-<form action="{{url_for('add_product')}}" method="POST">
+<form action="{{url_for('admin_dashboard')}}" method="POST">
     <label>Shoe Name: </label>
     <input type="text" name="name" required> <br>
     <label>Brand: </label>
@@ -27,5 +27,24 @@
     <input type="submit" value="Submit">
 
 </form>
+
+<hr>
+
+<h1>Products in Stock</h1>
+
+<div>
+
+    {% for product in products %}
+
+        <div>
+            Name: {{ product.name }}     Price: {{ product.price }} <br>
+
+            Quantity: {{ product.quantity }}
+        </div> 
+        <br>
+
+    {% endfor %}
+
+</div>
 
 {% endblock %}

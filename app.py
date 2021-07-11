@@ -15,10 +15,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Function to Authenticate Users based on roles, Only Admin Users can add/update Products and Admin can create Orders
 def authenticate_user():
     current_user = session["email"]
-    if current_user == "admin@mail.com": #AdminModel.find_by_email(current_user):
+    if current_user == "admin@mail.com": # AdminModel.find_by_email(current_user):
         return "Admin"
     elif CutomerModel.find_by_email(current_user):
         return "Customer"
+
 
 # Global Variables to Hold the CART ITEMs and Total Amount
 # cart_items = {}
@@ -82,7 +83,7 @@ def admin():
         # email and password matches
         if email == "admin@mail.com" and password == "1234567890":
             session["email"] = email
-            return redirect(url_for("add_product"))
+            return redirect(url_for("admin_dashboard"))
 
         # incorrect email and correct password
         elif email != "admin@mail.com" and password == "1234567890":
@@ -98,8 +99,8 @@ def admin():
         return render_template("admin.html")
 
 
-@app.route("/add-product", methods=["GET", "POST"])
-def add_product():
+@app.route("/dashboard", methods=["GET", "POST"])
+def admin_dashboard():
     auth = authenticate_user()
 
     if auth == "Admin":
@@ -116,9 +117,10 @@ def add_product():
             new_product = ProductModel(name=name, brand=brand, price=price, category=category, colour=colour, quantity=quantity)
             new_product.save_to_db()
             flash("New Product Added Successfully")
-            return redirect(url_for('all_products'))
+            return redirect(url_for('admin_dashboard'))
         else:
-            return render_template("addProduct.html")
+            products = ProductModel.find_all()
+            return render_template("adminDashboard.html", products=products)
     else:
         flash("Access Denied")
         return redirect(url_for("admin"))
@@ -147,11 +149,11 @@ def all_products():
     # Check if products have been previously added to cart and Cart variable is in Session
     if "cart" not in session:
         print("No cart")
-        return render_template("allProducts.html", products=products, cart={}, customer=customer)
+        return render_template("products.html", products=products, cart={}, customer=customer)
     else:
     # Cart is in Session, set the value to a variable - items, iterate over the items and find the product id, calculate the price, qty and add it to cart items global variable
         data = cart_factory()
-        return render_template("allProducts.html", products=products, cart=data[0], total=data[1], customer=customer)
+        return render_template("products.html", products=products, cart=data[0], total=data[1], customer=customer)
 
 
 @app.route("/add-to-cart/<int:product_id>")

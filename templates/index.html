@@ -4,6 +4,7 @@
 {% block content %}
 
 
+<div class="index-container">
 
 <div class="login-form">
     
@@ -22,8 +23,10 @@
         <input type="password" name="password" placeholder="Password" required> <br>
         <input class="submit" type="submit" value="Submit">
     </form>
-    
-    <h1 class="sign-up-text">Not a Member?</h1>
+    Here
+    <h1 class="sign-up-text">Not a Member?</h1><a href="{{url_for('register')}}">Register </a>
+</div>
+
 </div>
 
 
