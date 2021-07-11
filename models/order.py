@@ -16,11 +16,12 @@ class OrderModel(db.Model, TimeMixin):
     billing_adress = db.Column(db.String(120), nullable=False)
 
 
-    def __init__(self, customer_id, order_data, status, amount):
+    def __init__(self, customer_id, order_data, status, amount, billing_adress):
         self.customer_id = customer_id
         self.order_data = order_data
         self.status = status
         self.amount = amount
+        self.billing_adress = billing_adress
 
     def save_to_db(self):
         db.session.add(self)

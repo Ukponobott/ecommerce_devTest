@@ -1,5 +1,7 @@
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 import os
+import json
+import requests
 from werkzeug.security import check_password_hash
 
 from models.user import CutomerModel, AdminModel
@@ -156,6 +158,20 @@ def all_products():
         return render_template("products.html", products=products, cart=data[0], total=data[1], customer=customer)
 
 
+@app.route("/product/<int:product_id>", methods=["POST"])
+def product(product_id):
+    if authenticate_user() == "Admin":
+        this_product = ProductModel.find_by_id(product_id)
+        updated_qty = request.form["qty"]
+        this_product.quantity = updated_qty
+        this_product.save_to_db()
+        flash("Product Quantity successfully updated")
+        return redirect(url_for('admin_dashboard'))
+    else:
+        flash("Access Denied")
+        return redirect(url_for("admin"))
+
+
 @app.route("/add-to-cart/<int:product_id>")
 def add_to_cart(product_id):
     # Check if Cart is present in session Variables / Set it if NOT available
@@ -175,15 +191,21 @@ def create_order(customer_id):
             customer = CutomerModel.find_by_email(session["email"])
 
             data = cart_factory()
+            cart = json.dumps(data[0])
             if request.method == "GET":
                 print(data[0])
                 return render_template("order.html", cart=data[0], customer=customer, total=data[1])
             else:
                 #POST REQUEST
-                order = OrderModel(customer_id, order_data=data[0], status="Pending", amount=data[1])
+                order = OrderModel(customer_id, order_data=cart, status="Pending", amount=data[1], billing_adress=request.form["address"])
+                order.save_to_db()
+
+                # Update the inditouch vidual item quantities here
+
                 flash("Order Created, Proceed to make Payment")
-                return "Done, Proceed to Pay"
+                return redirect(url_for('order_payment', order_id=order.id))
                 # Redirect to Payment page
+            
         else:
             flash("Access Denied")
             # Redirect to Login  
@@ -192,6 +214,43 @@ def create_order(customer_id):
             flash("Please Sign in to place an Order")
             # Redirect to Login  
             return redirect(url_for("index")) 
+
+
+@app.route("/order/<int:order_id>/payment")
+def order_payment(order_id):
+    if authenticate_user() == "Customer":
+        customer = CutomerModel.find_by_email(session["email"])
+        order = OrderModel.find_by_id(order_id)
+
+        url = "api.paystack.co"
+        auth = "sk_test_8e81c920217c39de48c778ca688c97f23035f86a"
+        params = {"email": customer.email,  "amount": order.amount, "metadata": order.order_data}
+    
+
+        res = requests.post("https://api.paystack.co/transaction/initialize", headers={'Authorization': 'Bearer {}'.format(auth), 'Content-Type': 'application/json'}, json=params)
+        
+        res = res.json()
+        # return res
+        auth_url = res["data"]["authorization_url"]
+        reference = res["data"]["reference"]
+        return redirect(auth_url)
+
+        reference = request.args.get("reference")
+
+        res1 = res = requests.get("https://api.paystack.co/transaction/verify/" + reference, headers={'Authorization': 'Bearer {}'.format(auth)})
+        
+        # return res1.json()
+#         response = transaction.verify(reference)
+#         if response[3]["status"] == "success":
+#             order.status = "Paid" 
+#             return render_template("payment.html", response=response)
+
+#         elif response[3]["status"] == "failed":
+#             order.status = "unpaid" 
+#             return render_template("payment.html", response=response)
+#     else:
+#         flash("Please Login to continue")
+#         return redirect(url_for('index'))
 
 
 @app.before_first_request

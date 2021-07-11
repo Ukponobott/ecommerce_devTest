@@ -37,10 +37,20 @@
     {% for product in products %}
 
         <div>
-            Name: {{ product.name }}     Price: {{ product.price }} <br>
+            Name: {{ product.name }}    Price: {{ product.price }} <br>
 
             Quantity: {{ product.quantity }}
         </div> 
+
+        <form action="{{url_for('product', product_id=product.id)}}" method="POST">
+        
+            <label>Update Quantity</label>
+            <input type="number" name="qty" value="{{ product.quantity }}">
+
+            <input type="submit" value="Update QTY">
+
+        </form>
+
         <br>
 
     {% endfor %}
